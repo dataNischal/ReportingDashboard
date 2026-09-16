@@ -1,0 +1,23 @@
+# Never bake secrets or local dev state into the image.
+.env
+.env.*
+!.env.example
+
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Generated output, not source -- built fresh outside Docker if ever needed.
+Dashboard/
+
+# Local dev/OS cruft.
+.vscode/
+.idea/
+*.log
+.DS_Store
+Thumbs.db
+
+# Not needed inside the image either way.
+.git/
+.gitignore

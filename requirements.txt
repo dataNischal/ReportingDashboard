@@ -1,0 +1,41 @@
+# Report Dashboard -- PostgreSQL-centric ETL + dashboard API.
+# Scoped to only what this project's code actually imports (a trimmed
+# subset of the original project's requirements.txt -- no boto3/S3, no
+# LightGBM/XGBoost/CatBoost/Prophet, since forecasting is not yet wired
+# into this project; see README.md's "Not included" section).
+
+# Codes/cleaning_functions.py, Codes/postgres_pipeline.py
+pandas==3.0.5
+numpy==2.5.1
+PyYAML==6.0.3
+
+# Windows has no bundled IANA timezone database, which zoneinfo (stdlib,
+# used by cleaning_functions.normalize_timezones) needs at runtime.
+# Required on Windows; harmless no-op on Linux/macOS.
+tzdata
+
+# Codes/postgres_pipeline.py -- synchronous Postgres connectivity for the
+# batch ETL CLI (psycopg2, not asyncpg -- see that file's docstring on why
+# it deliberately stays synchronous). Connection info is NEVER stored in
+# this repo -- read entirely from DATABASE_URL/PG_* environment variables.
+SQLAlchemy==2.0.36
+psycopg2-binary==2.9.10
+
+# Codes/api/* -- FastAPI middleware between the dashboard and Postgres
+# (auth + aggregated data endpoints), fully async (see Codes/api/db.py) --
+# asyncpg is the async driver SQLAlchemy's async engine uses here, distinct
+# from postgres_pipeline.py's synchronous psycopg2 above. uvicorn is the
+# ASGI server that runs it; python-multipart is FastAPI's own requirement
+# for parsing form-encoded request bodies; email-validator backs
+# pydantic's EmailStr (routers/auth.py's LoginRequest) -- pydantic does
+# NOT install this by default, and importing a model that uses EmailStr
+# raises ImportError without it.
+asyncpg==0.31.0
+fastapi==0.115.6
+uvicorn[standard]==0.32.1
+python-multipart==0.0.20
+email-validator==2.2.0
+
+# Codes/api/security.py -- argon2id password hashing (OWASP's current
+# default recommendation) for dashboard_credential.password_hash.
+argon2-cffi==23.1.0

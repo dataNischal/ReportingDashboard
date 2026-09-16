@@ -1,0 +1,37 @@
+# Secrets / local connection info -- never commit real credentials.
+# See README.md/.env.example for what to fill in instead.
+.env
+.env.*
+!.env.example
+
+# Project-local virtualenv (see CLAUDE.md's Setup section -- always a
+# dedicated .venv here, never a shared/global Python environment).
+.venv/
+venv/
+
+# Python bytecode/caches.
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Generated output -- built fresh from business_report by
+# Codes/interactive_dashboard_generator.py, not source.
+Dashboard/
+
+# Claude Code local settings (machine-specific permissions/state) --
+# a shared .claude/settings.json, if one is ever added, is NOT covered
+# by this and should stay tracked.
+.claude/settings.local.json
+
+# Playwright (only ever installed ad hoc into .venv for a live browser
+# test, never a project dependency -- see requirements.txt).
+test-results/
+playwright-report/
+
+# Editor / OS cruft.
+.vscode/
+.idea/
+*.log
+.DS_Store
+Thumbs.db

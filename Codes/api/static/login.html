@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>iSend Dashboard — Login</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  /* Same palette as interactive_dashboard_template.html's default "cloud"
+     theme, so this page reads as part of the same product, not a bolted-on
+     login form. */
+  :root {
+    --bg: #e8edf5;
+    --card-bg: rgba(255, 255, 255, 0.82);
+    --card-border: rgba(30, 41, 59, 0.10);
+    --text-main: #1e293b;
+    --text-muted: #5b6b82;
+    --accent: #4f46e5;
+    --accent-dark: #3730a3;
+    --accent-glow: rgba(79, 70, 229, 0.18);
+    --error: #b3261e;
+    --error-bg: #fdecea;
+    --field-border: #c9d3e0;
+    --field-bg: #f8fafc;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: var(--text-main);
+    background-color: var(--bg);
+    background-image:
+      radial-gradient(at 0% 0%, rgba(79, 70, 229, 0.12) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, rgba(79, 70, 229, 0.10) 0px, transparent 50%);
+  }
+
+  .login-card {
+    width: 100%;
+    max-width: 380px;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    box-shadow: 0 20px 50px -12px rgba(30, 41, 59, 0.18), 0 4px 12px rgba(30, 41, 59, 0.06);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    padding: 2.25rem 2rem 2rem;
+  }
+
+  .login-logo {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1.25rem;
+  }
+  .login-logo svg { width: 148px; height: auto; }
+
+  .login-heading {
+    text-align: center;
+    margin-bottom: 1.75rem;
+  }
+  .login-heading h1 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin: 0 0 0.3rem;
+    color: var(--text-main);
+  }
+  .login-heading p {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin: 0;
+  }
+
+  .field {
+    margin-bottom: 1.1rem;
+  }
+  .field label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 0.4rem;
+  }
+  .field-input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .field-input-wrap svg.field-icon {
+    position: absolute;
+    left: 0.75rem;
+    width: 18px;
+    height: 18px;
+    color: var(--text-muted);
+    pointer-events: none;
+  }
+  .field input {
+    width: 100%;
+    padding: 0.65rem 0.75rem 0.65rem 2.4rem;
+    font-size: 0.9rem;
+    font-family: inherit;
+    color: var(--text-main);
+    background: var(--field-bg);
+    border: 1px solid var(--field-border);
+    border-radius: 8px;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .field input::placeholder { color: #9aa8bc; }
+  .field input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+  .field input:invalid:not(:placeholder-shown) {
+    border-color: var(--error);
+  }
+
+  .toggle-password {
+    position: absolute;
+    right: 0.6rem;
+    background: none;
+    border: none;
+    padding: 0.25rem;
+    display: flex;
+    cursor: pointer;
+    color: var(--text-muted);
+    border-radius: 4px;
+  }
+  .toggle-password:hover { color: var(--text-main); }
+  .toggle-password svg { width: 18px; height: 18px; }
+
+  #error {
+    display: none;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.82rem;
+    color: var(--error);
+    background: var(--error-bg);
+    border-radius: 8px;
+    padding: 0.6rem 0.75rem;
+    margin-bottom: 1rem;
+  }
+  #error.visible { display: flex; }
+  #error svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+  button#submit-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.7rem;
+    margin-top: 0.4rem;
+    font-family: inherit;
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: #fff;
+    background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: filter 0.15s ease, transform 0.05s ease;
+  }
+  button#submit-btn:hover:not(:disabled) { filter: brightness(1.08); }
+  button#submit-btn:active:not(:disabled) { transform: translateY(1px); }
+  button#submit-btn:disabled { opacity: 0.7; cursor: default; }
+
+  .spinner {
+    display: none;
+    width: 15px; height: 15px;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  button#submit-btn.loading .spinner { display: inline-block; }
+  button#submit-btn.loading .btn-label { opacity: 0.85; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .login-footer {
+    text-align: center;
+    margin-top: 1.5rem;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+
+  @media (max-width: 420px) {
+    .login-card { padding: 1.75rem 1.5rem 1.5rem; }
+  }
+</style>
+</head>
+<body>
+<div class="login-card">
+  <div class="login-logo">
+    <svg viewBox="0 0 280 90" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="iSend logo"><path fill-rule="evenodd" clip-rule="evenodd" d="M261.655 1.31942C261.502 2.04525 260.351 8.07627 259.098 14.722C257.846 21.3677 256.778 26.8526 256.726 26.9104C256.674 26.9682 255.283 26.7885 253.635 26.511C244.553 24.981 234.684 27.3046 226.888 32.8073C219.432 38.0703 213.442 47.4104 211.36 57.0188C208.066 72.2236 213.009 84.8901 223.589 88.3553C225.384 88.9431 226.138 89.025 229.666 89.015C233.472 89.0042 233.839 88.9539 236.332 88.0981C237.784 87.6001 239.83 86.6845 240.879 86.0637C242.971 84.8262 246.281 81.8276 247.902 79.7018C248.471 78.9552 248.978 78.3849 249.028 78.4346C249.127 78.5341 248.652 84.7098 248.4 86.5959L248.243 87.7764H256.434H264.626L264.788 86.3181C264.877 85.5162 265.078 83.4848 265.234 81.8043C266.078 72.7058 266.525 70.037 272.024 41.2494C273.92 31.319 276.419 18.1942 277.577 12.0831C278.734 5.97213 279.749 0.7536 279.831 0.486104C279.971 0.0299995 279.423 0 270.957 0H261.934L261.655 1.31942ZM65.4998 2.5058C61.0543 3.1219 56.4815 4.50076 52.861 6.31685C45.4821 10.0185 40.4449 16.1778 38.6899 23.6449C38.0452 26.389 38.0405 31.7103 38.6808 34.142C40.0263 39.253 43.6758 43.7904 49.8952 48.0859C50.9152 48.7904 53.8521 50.5364 56.4218 51.9656C58.9913 53.3947 61.8735 55.2075 62.8268 55.9939C66.7762 59.2516 67.7551 62.9813 65.7509 67.134C64.509 69.7073 61.154 71.6975 56.8163 72.4345C54.6518 72.8022 53.6624 72.8217 50.4999 72.5592C45.7938 72.1683 42.4102 71.3097 37.5997 69.2862C35.5214 68.4117 33.7758 67.7459 33.7205 67.8062C33.4936 68.0534 28 81.7299 28 82.0474C28 82.9973 35.6611 86.1303 40.2222 87.0456C47.343 88.4745 57.3774 88.3053 63.9243 86.6465C72.9242 84.3659 80.0648 78.8382 83.4359 71.542C85.1459 67.8412 85.6197 65.4243 85.6181 60.4157C85.6167 56.333 85.5559 55.7905 84.8709 53.7492C83.862 50.7428 82.4181 48.3837 80.0245 45.831C77.6395 43.2874 75.6573 41.8824 68.2401 37.4772C58.6801 31.7995 56.8204 29.7957 57.2249 25.6091C57.4849 22.9166 59.3068 20.5969 62.2712 19.1833C64.741 18.0058 67.1479 17.6708 71.7384 17.8664C75.9981 18.0475 77.7698 18.4261 82.3775 20.1389C83.9448 20.7214 85.2861 21.1391 85.3581 21.0672C85.545 20.8805 90.7775 6.92239 90.7775 6.61101C90.7775 6.21963 86.9625 4.5391 84.607 3.893C80.6289 2.80162 77.9451 2.45857 72.5831 2.35635C69.6804 2.30108 66.4929 2.3683 65.4998 2.5058ZM121.611 26.3963C116.547 27.1046 110.845 29.2571 106.853 31.9681C104.566 33.5214 100.627 37.3253 98.6969 39.8449C94.2694 45.6254 91.2892 53.6183 90.8714 60.8324L90.7028 63.749L94.0314 59.3046C99.3591 52.1909 103.169 48.4304 109.324 44.2107C111.135 42.9688 112.888 41.6635 113.22 41.3105L113.823 40.6683L111.167 37.8339C109.262 35.8017 108.659 34.9995 109.036 34.9995C110.035 34.9995 136.45 36.968 136.53 37.0483C136.574 37.0928 133.017 42.3207 128.625 48.6659C124.232 55.0114 120.601 60.1083 120.556 59.9921C120.51 59.876 120.186 58.0783 119.834 55.9972C119.483 53.9158 119.119 52.1373 119.027 52.0445C118.824 51.842 116.904 52.9303 114.227 54.7658C111.818 56.4183 105.219 63.0857 102.451 66.6657C100.387 69.3351 96.0986 75.6944 95.0894 77.5824C94.5475 78.5957 94.5472 78.6235 95.0692 79.5924C95.875 81.0888 99.6277 84.5168 101.777 85.7198C106.577 88.4061 111.089 89.2945 118.914 89.0939C126.467 88.9006 131.526 87.9156 137.375 85.5006L139.388 84.669L139.374 83.2368C139.356 81.419 138.408 71.9814 138.225 71.7981C138.149 71.7225 137.161 72.0442 136.03 72.5125C131.648 74.3258 126.637 75.2794 121.521 75.2725C116.29 75.2655 112.801 74.043 110.404 71.3775C109.082 69.9073 108 67.272 108 65.5254V64.7212H111.833C120.083 64.7212 127.38 63.7521 132.818 61.9341C136.462 60.7155 138.413 59.7177 140.841 57.8299C145.022 54.5797 147.413 49.1204 147.076 43.5946C146.545 34.8814 141.685 29.2493 132.696 26.9315C130.036 26.2457 124.574 25.9818 121.611 26.3963ZM185.703 26.5507C180.547 27.4826 176.525 29.7937 172.231 34.2911C169.449 37.2047 169.443 37.2092 169.575 36.175C170.334 30.2406 170.636 27.451 170.532 27.3468C170.301 27.116 154.978 27.219 154.834 27.4524C154.756 27.5793 154.368 29.7354 153.972 32.244C152.925 38.875 151.035 49.4367 148.658 61.9435C146.952 70.9175 145.665 77.8213 143.986 87.0126L143.847 87.7764H152.814H161.782L162.562 83.5404C166.778 60.6185 168.214 54.2583 169.953 50.7956C172.02 46.6798 175.526 42.6527 178.145 41.3849C179.511 40.7235 182.643 40.3358 183.956 40.6652C185.308 41.0044 186.852 42.7071 187.345 44.4021C187.875 46.2232 187.745 50.8845 187.063 54.5825C186.837 55.8047 186.01 60.1796 185.224 64.3046C181.686 82.8768 180.823 87.6264 180.951 87.8331C181.13 88.122 198.031 88.1137 198.487 87.8242C198.693 87.6937 199.806 82.4707 201.194 75.1202C202.492 68.2551 203.982 60.388 204.506 57.638C205.969 49.9681 206.423 45.7718 206.262 41.4019C206.149 38.3341 205.994 37.2653 205.421 35.62C203.762 30.8562 200.49 27.7782 195.741 26.5143C193.844 26.0093 188.592 26.0285 185.703 26.5507ZM252.305 40.7069C253.546 41.3177 253.964 41.6691 253.944 42.0827C253.886 43.2391 251.002 58.028 250.353 60.4944C248.713 66.7231 245.468 71.4709 241.302 73.7383C239.3 74.828 236.189 75.0519 234.35 74.2386C230.537 72.5519 228.9 68.7328 229.202 62.2213C229.625 53.0734 234.49 44.2943 240.881 41.1483C243.325 39.9449 244.386 39.7386 247.721 39.8177C250.312 39.8788 250.824 39.9783 252.305 40.7069Z" fill="#4EBAEA"/><path fill-rule="evenodd" clip-rule="evenodd" d="M18.0802 12.2071C15.0997 12.8407 12.2513 15.1165 10.8475 17.9859C10.1552 19.4006 10.0702 19.877 10.0677 22.3516C10.0652 24.8283 10.1516 25.3169 10.8633 26.8577C11.7947 28.8743 14.0172 31.1312 15.8841 31.9573C21.2282 34.3212 27.3963 32.007 29.8815 26.7057C30.5196 25.3444 30.6201 24.7694 30.619 22.4905C30.6176 20.1683 30.521 19.6422 29.8132 18.1067C27.8343 13.8134 22.6905 11.2271 18.0802 12.2071ZM9.48163 36.3139C8.67857 36.8503 8.91913 35.6892 3.10582 67.0732C1.94555 73.337 0.772219 79.6805 0.498053 81.1702L0 83.8785H9.40746C14.5816 83.8785 18.8149 83.8179 18.8149 83.7438C18.8149 83.6699 20.8774 73.0031 23.3982 60.0402C25.9191 47.0771 27.9815 36.3878 27.9815 36.2861C27.9815 36.0325 9.86246 36.0595 9.48163 36.3139Z" fill="#1761AF"/></svg>
+  </div>
+
+  <div class="login-heading">
+    <h1>iSend Transaction Dashboard</h1>
+    <p>Sign in to view transaction reporting</p>
+  </div>
+
+  <div id="error" role="alert">
+    <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 6a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 6zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/></svg>
+    <span id="error-text"></span>
+  </div>
+
+  <form id="login-form" novalidate>
+    <div class="field">
+      <label for="email">Email</label>
+      <div class="field-input-wrap">
+        <svg class="field-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2.5 5.5A1.5 1.5 0 014 4h12a1.5 1.5 0 011.5 1.5v9A1.5 1.5 0 0116 16H4a1.5 1.5 0 01-1.5-1.5v-9zM4 5.5v.379l6 3.6 6-3.6V5.5H4zm12 1.87-5.606 3.364a.75.75 0 01-.788 0L4 7.37V14.5h12V7.37z"/></svg>
+        <input id="email" name="email" type="email" placeholder="you@isend.com.sg" required autocomplete="username" autofocus>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="password">Password</label>
+      <div class="field-input-wrap">
+        <svg class="field-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clip-rule="evenodd"/></svg>
+        <input id="password" name="password" type="password" placeholder="••••••••" required autocomplete="current-password">
+        <button type="button" class="toggle-password" id="toggle-password" aria-label="Show password">
+          <svg id="eye-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M10 3.5c-4.14 0-7.66 2.6-9 6.5 1.34 3.9 4.86 6.5 9 6.5s7.66-2.6 9-6.5c-1.34-3.9-4.86-6.5-9-6.5zm0 10.5a4 4 0 110-8 4 4 0 010 8zm0-6.5a2.5 2.5 0 100 5 2.5 2.5 0 000-5z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <button id="submit-btn" type="submit">
+      <span class="spinner"></span>
+      <span class="btn-label">Log in</span>
+    </button>
+  </form>
+
+  <div class="login-footer">iSend Transaction Dashboard</div>
+</div>
+
+<script>
+  const form = document.getElementById('login-form');
+  const errorEl = document.getElementById('error');
+  const errorText = document.getElementById('error-text');
+  const submitBtn = document.getElementById('submit-btn');
+  const passwordInput = document.getElementById('password');
+  const toggleBtn = document.getElementById('toggle-password');
+  const eyeIcon = document.getElementById('eye-icon');
+
+  const EYE_OPEN = eyeIcon.innerHTML;
+  const EYE_CLOSED = '<path d="M3.28 2.22a.75.75 0 00-1.06 1.06l14.5 14.5a.75.75 0 101.06-1.06l-1.86-1.86c1.66-1.24 2.95-2.98 3.7-5.02-1.34-3.9-4.86-6.5-9-6.5-1.44 0-2.8.32-4.02.9L3.28 2.22zM10 6.5c.3 0 .59.03.87.09L8.6 8.87A2.5 2.5 0 0110 6.5zm-4.24 1.4L4.1 6.24A9.86 9.86 0 001 10c1.34 3.9 4.86 6.5 9 6.5 1 0 1.96-.15 2.86-.44l-1.4-1.4A4 4 0 018.2 9.3l-2.44-2.4z"/>';
+
+  toggleBtn.addEventListener('click', () => {
+    const isPassword = passwordInput.type === 'password';
+    passwordInput.type = isPassword ? 'text' : 'password';
+    eyeIcon.innerHTML = isPassword ? EYE_CLOSED : EYE_OPEN;
+    toggleBtn.setAttribute('aria-label', isPassword ? 'Hide password' : 'Show password');
+  });
+
+  function showError(message) {
+    errorText.textContent = message;
+    errorEl.classList.add('visible');
+  }
+  function hideError() {
+    errorEl.classList.remove('visible');
+  }
+  function setLoading(loading) {
+    submitBtn.disabled = loading;
+    submitBtn.classList.toggle('loading', loading);
+  }
+
+  form.addEventListener('submit', async (evt) => {
+    evt.preventDefault();
+    hideError();
+    setLoading(true);
+
+    try {
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          email: document.getElementById('email').value,
+          password: passwordInput.value,
+        }),
+      });
+
+      if (!res.ok) {
+        showError('Invalid email or password.');
+        setLoading(false);
+        return;
+      }
+
+      // Deliberately NOT reset to not-loading here -- the button stays in
+      // its loading state through the redirect, since /dashboard's own
+      // initial data fetch can itself take a while (see CLAUDE.md's "Two
+      // ways to view the dashboard" section on cold-connection warm-up);
+      // flipping back to "Log in" here would look like the click did
+      // nothing for however long that takes.
+      window.location.href = '/dashboard';
+    } catch (err) {
+      showError('Could not reach the server. Try again.');
+      setLoading(false);
+    }
+  });
+</script>
+</body>
+</html>

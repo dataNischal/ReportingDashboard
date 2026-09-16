@@ -1,0 +1,439 @@
+# ============================================================
+# cleaning_config.yml (Report Dashboard project)
+#
+# Trimmed from the original DATA MIGRATION project's config: this project
+# reads raw data from Postgres (IPAYDATA/iPayHub_Data) and writes cleaned
+# data back to Postgres (ipaydata_clean/ipayhubdata_clean) exclusively --
+# see Codes/postgres_pipeline.py -- so the original file's raw_data_source/
+# output_destination sections (S3/local CSV toggles) are omitted entirely
+# rather than carried over unused. cleaning_functions.load_cleaning_config()
+# treats both as optional (skips their validation if absent), so this is
+# safe. Everything below (shared_mappings, shared_transformations,
+# timezone_normalization, tables, business_reporting) is unchanged from the
+# original project -- it is the single source of truth for both
+# Codes/cleaning_functions.py's clean_data()/normalize_timezones() AND
+# sql/003_business_report_mv.sql's hand-translated SQL equivalent. If either
+# is ever changed, update both.
+# ============================================================
+
+shared_mappings:
+
+  country_codes:
+    UK: "UNITED KINGDOM"
+    USA: "UNITED STATES"
+    SGP: "SINGAPORE"
+    AUS: "AUSTRALIA"
+    MYS: "MALAYSIA"
+    GBR: "UNITED KINGDOM"
+    MEX: "MEXICO"
+    ARE: "UNITED ARAB EMIRATES"
+    BGD: "BANGLADESH"
+    CHN: "CHINA"
+    GEO: "GEORGIA"
+    HKG: "HONG KONG"
+    IDN: "INDONESIA"
+    IND: "INDIA"
+    JPN: "JAPAN"
+    KOR: "SOUTH KOREA"
+    LKA: "SRI LANKA"
+    NPL: "NEPAL"
+    PAK: "PAKISTAN"
+    PHL: "PHILIPPINES"
+    THA: "THAILAND"
+    TUR: "TURKEY"
+    TWN: "TAIWAN"
+    VNM: "VIETNAM"
+    AE: "UNITED ARAB EMIRATES"
+    IVORY COAST: "COTE D IVOIRE"
+    COTE D`IVOIRE: "COTE D IVOIRE"
+    TANZANIA, UNITED REPUBLIC OF: "TANZANIA"
+    NETHERLAND: "NETHERLANDS"
+    TAIWAN, PROVINCE OF CHINA: "TAIWAN"
+
+  payment_type:
+    BANK: "Bank Transfer"
+    "Account Deposit to Other Bank": "Bank Transfer"
+
+  transaction_status:
+    PAYOUT: "Payment"
+
+  agent_name:
+    "Terra Payment Services (UK) Limited(Sender)": "Terra Payment Services (UK) Limited"
+    "BNB PaaSPay AUS": "Bhutan National Bank (PaaSPay)"
+    "EPAYAPI": "EPAY LIMITED"
+    "ISEND APPs": "ISEND PTE LTD (APPs)"
+    "iSend Biz Singapore": "iSend BIZ SGP"
+    "Mobile money": "Mobile Money International SDN bhd"
+    "PT Top Remit(Sending)": "PT Top Remit"
+    "Speed Remit": "Speed Remit - Send"
+    "Speed Remit - Payout": "Speed Remit - Send"
+    "TERRAPAY (SENDER)": "Terra Payment Services (UK) Limited"
+    "TERRA PAYMENT SERVICES (UK) LIMITED(SENDER)": "Terra Payment Services (UK) Limited"
+    "Tranglo PTE LTD (Send)": "Tranglo PTE LTD"
+
+  agent_country_override:
+    "HAND MONEY PAYMENTS, S.A. de C.V.": "MEXICO"
+
+
+# ============================================================
+# TRANSFORMATION ENGINE
+# ============================================================
+
+shared_transformations:
+
+  postgres_timestamp:
+    type: datetime
+    input_formats:
+      - "%Y-%m-%d %H:%M:%S.%f"
+      - "%Y-%m-%d %H:%M:%S"
+      - "%Y-%m-%d"
+    output_format: "%Y-%m-%dT%H:%M:%S"
+
+
+# ============================================================
+# TIMEZONE NORMALIZATION
+#
+# All date columns are converted to target_timezone (the preferred
+# reporting timezone — currently Malaysia) EXCEPT any column explicitly
+# declared `mode: skip` because it is already recorded in that target
+# timezone and must never be altered.
+#
+# Per-column modes:
+#   fixed:      whole column shares one known source timezone (`timezone:`).
+#   by_country: each row's source timezone is looked up via `country_column`
+#               (values resolved through country_timezones below).
+#   skip:       column is already in target_timezone; left completely
+#               unconverted (never localized/re-stringified).
+# ============================================================
+
+timezone_normalization:
+
+  target_timezone: "Asia/Kuala_Lumpur"
+
+  country_timezones:
+    AUSTRALIA: "Australia/Sydney"
+    AUSTRIA: "Europe/Vienna"
+    BAHRAIN: "Asia/Bahrain"
+    BANGLADESH: "Asia/Dhaka"
+    BELGIUM: "Europe/Brussels"
+    BHUTAN: "Asia/Thimphu"
+    BRAZIL: "America/Sao_Paulo"
+    BRUNEI DARUSSALAM: "Asia/Brunei"
+    BULGARIA: "Europe/Sofia"
+    CAMEROON: "Africa/Douala"
+    CANADA: "America/Toronto"
+    CHINA: "Asia/Shanghai"
+    COTE D IVOIRE: "Africa/Abidjan"
+    CROATIA: "Europe/Zagreb"
+    CYPRUS: "Asia/Nicosia"
+    CZECH REPUBLIC: "Europe/Prague"
+    DENMARK: "Europe/Copenhagen"
+    EGYPT: "Africa/Cairo"
+    ESTONIA: "Europe/Tallinn"
+    ETHIOPIA: "Africa/Addis_Ababa"
+    FINLAND: "Europe/Helsinki"
+    FRANCE: "Europe/Paris"
+    GEORGIA: "Asia/Tbilisi"
+    GERMANY: "Europe/Berlin"
+    GHANA: "Africa/Accra"
+    GIBRALTAR: "Europe/Gibraltar"
+    GREECE: "Europe/Athens"
+    HONG KONG: "Asia/Hong_Kong"
+    HUNGARY: "Europe/Budapest"
+    ICELAND: "Atlantic/Reykjavik"
+    INDIA: "Asia/Kolkata"
+    INDONESIA: "Asia/Jakarta"
+    IRELAND: "Europe/Dublin"
+    ITALY: "Europe/Rome"
+    JAPAN: "Asia/Tokyo"
+    KAZAKHSTAN: "Asia/Almaty"
+    KENYA: "Africa/Nairobi"
+    KUWAIT: "Asia/Kuwait"
+    LATVIA: "Europe/Riga"
+    LIECHTENSTEIN: "Europe/Vaduz"
+    LITHUANIA: "Europe/Vilnius"
+    LUXEMBOURG: "Europe/Luxembourg"
+    MALAYSIA: "Asia/Kuala_Lumpur"
+    MALTA: "Europe/Malta"
+    MEXICO: "America/Mexico_City"
+    MONACO: "Europe/Monaco"
+    MOROCCO: "Africa/Casablanca"
+    NEPAL: "Asia/Kathmandu"
+    NETHERLANDS: "Europe/Amsterdam"
+    NEW ZEALAND: "Pacific/Auckland"
+    NIGERIA: "Africa/Lagos"
+    NORWAY: "Europe/Oslo"
+    OMAN: "Asia/Muscat"
+    PAKISTAN: "Asia/Karachi"
+    PHILIPPINES: "Asia/Manila"
+    POLAND: "Europe/Warsaw"
+    PORTUGAL: "Europe/Lisbon"
+    QATAR: "Asia/Qatar"
+    ROMANIA: "Europe/Bucharest"
+    SAUDI ARABIA: "Asia/Riyadh"
+    SEYCHELLES: "Indian/Mahe"
+    SINGAPORE: "Asia/Singapore"
+    SLOVAKIA: "Europe/Bratislava"
+    SLOVENIA: "Europe/Ljubljana"
+    SOUTH AFRICA: "Africa/Johannesburg"
+    SOUTH KOREA: "Asia/Seoul"
+    SPAIN: "Europe/Madrid"
+    SRI LANKA: "Asia/Colombo"
+    SWEDEN: "Europe/Stockholm"
+    SWITZERLAND: "Europe/Zurich"
+    TAIWAN: "Asia/Taipei"
+    TANZANIA: "Africa/Dar_es_Salaam"
+    THAILAND: "Asia/Bangkok"
+    TURKEY: "Europe/Istanbul"
+    UGANDA: "Africa/Kampala"
+    UNITED ARAB EMIRATES: "Asia/Dubai"
+    UNITED KINGDOM: "Europe/London"
+    UNITED STATES: "America/New_York"
+    URUGUAY: "America/Montevideo"
+    VIETNAM: "Asia/Ho_Chi_Minh"
+
+  tables:
+    Inficare:
+      TRN_Date:
+        mode: skip
+      Paid_Date:
+        mode: by_country
+        country_column: Receiver_Country
+
+    # iSendHub's DOT(Date_Of_TXN) is DELIBERATELY NOT listed here (as of
+    # the fix below) -- it used to have `mode: fixed, timezone:
+    # "Asia/Kathmandu"`, converting it to target_timezone (Malaysia) right
+    # here at clean time, PERMANENTLY overwriting the original value in
+    # ipayhubdata_clean. Confirmed in practice this was the cause of a real
+    # reporting mismatch against the Accounts department's own MIS: Nepal
+    # is UTC+5:45, Malaysia is UTC+8 -- a +2h15m shift pushes late-day
+    # transactions into the next calendar day (or month, at month-end),
+    # so day/month-level Volume/Transaction reporting no longer matched
+    # what Accounts sees, which reports on the transaction's original
+    # (Nepal) recorded date. DOT(Date_Of_TXN) now stays raw all the way
+    # into business_report's "TRN_Date" column (used for every
+    # Volume/Transaction/Geography/etc. Year/Month/Day/Hour dimension);
+    # the Nepal->Malaysia conversion still happens, but only inside
+    # sql/003_business_report_mv.sql, into a SEPARATE "TRN_Date_Normalized"
+    # column used just for Turn_Around_Time_Hours and the TAT Analysis
+    # tab's own bucketing (see that file's header comment) -- TAT is an
+    # elapsed-duration metric between two timestamps, and mixing a raw-clock
+    # TRN_Date with an already-normalized Paid_Date would silently skew
+    # every iSendHub TAT value by that same ~2h15m.
+    iSendHub:
+      Paid_Date:
+        mode: fixed
+        timezone: "Asia/Kathmandu"
+
+
+# ============================================================
+# TABLE CONFIGURATION
+# ============================================================
+
+tables:
+
+  iSendHub:
+
+    defaults:
+      Partner_TXN_Id: "9999"
+      Payout_Pin_Number: "iSend_Pin_9999"
+      Sender_Name: "iSend_Sender"
+      Receiver_Name: "iSend_Receiver"
+      Approved_Date: "1970-01-01 00:00:00"
+      Payout_Agent_Name: "iSend_Payout"
+      Exchange_Rate: 0
+      Commission_And_Service_Charge: 0
+      Collected_Amount: 0
+      Account_Number: "8888"
+      Beneficiary_Bank_Name: "iSend_Bank"
+      Receiver_Contact: "7777"
+      Sender_ID_Type: "6666"
+      Sender_RFC: "iSend_RFC"
+      Sender_ID_Number: "5555"
+      Internal_Bank_Name: "iSend_Bank"
+      Beneficiary_Bank_Route_Code: "iSend9999"
+      Send_Cost_Rate: 0
+      Payout_Cost_Rate: 0
+      Sending_Commision: 0
+      Payout_Commission: 0
+      Hoc_Commission: 0
+      Backend_Fees: 0
+      Payout_Amount_Before_Fees: 0
+      Cancellation_Date: "1970-01-03 00:00:00"
+      Payout_Unique_Id: "iSend_Unique_9999"
+
+    transformations:
+
+      DOT(Date_Of_TXN):
+        source_column: "DOT(Date_Of_TXN)"
+        transform_ref: postgres_timestamp
+
+      Approved_Date:
+        source_column: Approved_Date
+        transform_ref: postgres_timestamp
+
+      Paid_Date:
+        source_column: Paid_Date
+        transform_ref: postgres_timestamp
+
+      Cancellation_Date:
+        source_column: Cancellation_Date
+        transform_ref: postgres_timestamp
+
+      Payment_Type:
+        source_column: Payment_Type
+        mapping_ref: payment_type
+
+      Sending_Agent_Name:
+        source_column: Sending_Agent_Name
+        mapping_ref: agent_name
+
+      Send_Country:
+        source_column: Send_Country
+        mapping_ref: country_codes
+        normalize_text: true
+        override_from:
+          source_column: Sending_Agent_Name
+          mapping_ref: agent_country_override
+
+      Payout_Country:
+        source_column: Payout_Country
+        mapping_ref: country_codes
+        normalize_text: true
+
+      Status:
+        source_column: Status
+        mapping_ref: transaction_status
+
+
+  Inficare:
+
+    defaults:
+      Transaction_Method: "iSend_Payout"
+      Customer_Member_Number: "iSend7777"
+      Invoice_No: "4444"
+      Sender_Passport: "3333"
+      Receiver_Contact: "2222"
+      Bank_ID: "1111"
+      A/C_No: "iSend8888"
+      Sender_City: "iSend_City"
+      ben_bank_name: "iSend_Bank"
+      Partner_Refno: "0000"
+      Order_Number: "1010"
+      SenderNativeCountry: "iSend_Country"
+      PayoutCommission: 0
+
+    transformations:
+
+      Transaction_Date:
+        source_column: Transaction_Date
+        transform_ref: postgres_timestamp
+
+      TRN_Date:
+        source_column: TRN_Date
+        transform_ref: postgres_timestamp
+
+      Paid_Date:
+        source_column: Paid_Date
+        transform_ref: postgres_timestamp
+
+      Payment_Type:
+        source_column: Payment_Type
+        mapping_ref: payment_type
+
+      Agent_Name:
+        source_column: Agent_Name
+        mapping_ref: agent_name
+
+      Sending_Country:
+        source_column: Sending_Country
+        mapping_ref: country_codes
+        normalize_text: true
+        override_from:
+          source_column: Agent_Name
+          mapping_ref: agent_country_override
+
+      Receiver_Country:
+        source_column: Receiver_Country
+        mapping_ref: country_codes
+        normalize_text: true
+
+      transstatus:
+        source_column: transstatus
+        mapping_ref: transaction_status
+
+business_reporting:
+
+  # Kept here even though sql/003_business_report_mv.sql is the version
+  # that actually runs (SQL, not this YAML+pandas path) -- this remains the
+  # documented source of truth for what that SQL is supposed to compute.
+  exclude_agent_names:
+    - "INTERNAL SGP TEST"
+    - "IPAY INTERNAL TEST"
+    - "TEST PATNER"
+
+  Inficare:
+    columns:
+      Control_No:
+        source: Control_No
+      TRN_Date:
+        source: TRN_Date
+      Agent_Name:
+        source: Agent_Name
+      Transaction_Method:
+        source: Transaction_Method
+      Payment_Type:
+        source: Payment_Type
+      Sending_Country:
+        source: Sending_Country
+      Sending_Country_Currency:
+        source: Sending_Country_Currency
+      Receiver_Country:
+        source: Receiver_Country
+      Payout_Currency:
+        source: Payout_Currency
+      Transaction_Amount_USD:
+        formula: divide
+        numerator: Transaction_Amount
+        denominator: Exchange_Rate
+      transstatus:
+        source: transstatus
+      Paid_Date:
+        source: Paid_Date
+      Turn_Around_Time_Hours:
+        formula: duration_hours
+        start_column: TRN_Date
+        end_column: Paid_Date
+
+  iSendHub:
+    columns:
+      Control_No:
+        source: Tracking_No
+      TRN_Date:
+        source: DOT(Date_Of_TXN)
+      Agent_Name:
+        source: Sending_Agent_Name
+      Transaction_Method:
+        source: Payout_Agent_Name
+      Payment_Type:
+        source: Payment_Type
+      Sending_Country:
+        source: Send_Country
+      Sending_Country_Currency:
+        source: Sending_Currency
+      Receiver_Country:
+        source: Payout_Country
+      Payout_Currency:
+        source: Payout_Currency
+      Transaction_Amount_USD:
+        formula: divide
+        numerator: Send_Amount
+        denominator: Send_Cost_Rate
+      transstatus:
+        source: Status
+      Paid_Date:
+        source: Paid_Date
+      Turn_Around_Time_Hours:
+        formula: duration_hours
+        start_column: DOT(Date_Of_TXN)
+        end_column: Paid_Date

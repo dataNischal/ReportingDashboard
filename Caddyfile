@@ -1,0 +1,16 @@
+# Reverse proxy + TLS termination for the dashboard.
+#
+# DOMAIN (set in .env) controls how Caddy gets a certificate:
+#   - A real domain name, with its DNS A record pointed at this host's
+#     public IP and ports 80+443 reachable from the internet: Caddy
+#     automatically obtains and renews a real Let's Encrypt certificate.
+#     No other config needed -- just set DOMAIN and restart caddy.
+#   - Unset (defaults to "localhost" below): Caddy uses its own internal
+#     CA to self-sign a certificate instead. Works immediately for local
+#     testing, but browsers will show an untrusted-certificate warning
+#     until you either trust that internal CA locally or switch to a real
+#     DOMAIN.
+{$DOMAIN:localhost} {
+	encode gzip zstd
+	reverse_proxy api:8000
+}

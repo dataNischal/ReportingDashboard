@@ -1,0 +1,87 @@
+name: report-dashboard
+
+services:
+  # Always-on FastAPI dashboard, NOT published to the host directly -- only
+  # caddy is (see below). Session cookies are secure=True by default (see
+  # Codes/api/config.py's Settings.session_cookie_secure), which requires
+  # HTTPS end to end; caddy is what provides that.
+  api:
+    build: .
+    image: report-dashboard:latest
+    restart: unless-stopped
+    env_file:
+      - .env
+    expose:
+      - "8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/login')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  # TLS-terminating reverse proxy -- the only service published to the host.
+  # DOMAIN in .env controls behavior: a real domain (pointed at this host's
+  # public IP, with 80/443 reachable from the internet) gets an automatic
+  # Let's Encrypt certificate; leaving it unset (defaults to "localhost" --
+  # see Caddyfile) gets Caddy's self-signed internal-CA certificate instead,
+  # so this works out of the box before you have a domain, and upgrades to
+  # a real cert just by setting DOMAIN later -- no Caddyfile changes needed.
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    env_file:
+      - .env
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+  # One-off jobs -- NOT started by `docker compose up`, only by an explicit
+  # `docker compose run --rm <name> ...` (see README.md's Docker section).
+  etl:
+    build: .
+    image: report-dashboard:latest
+    profiles: ["tools"]
+    env_file:
+      - .env
+    working_dir: /app
+    command: ["python", "Codes/postgres_pipeline.py"]
+
+  migrate:
+    build: .
+    image: report-dashboard:latest
+    profiles: ["tools"]
+    env_file:
+      - .env
+    working_dir: /app
+    command: ["python", "Codes/run_migrations.py"]
+
+  create-user:
+    build: .
+    image: report-dashboard:latest
+    profiles: ["tools"]
+    env_file:
+      - .env
+    working_dir: /app
+    # getpass needs a real TTY -- run this one with `docker compose run`
+    # (not `up`), which allocates one by default.
+    #
+    # The --email below is a PLACEHOLDER, deliberately -- create_user.py's
+    # UserProvisioningService does an upsert (create_or_update), so running
+    # this unedited against a real stakeholder's actual email would
+    # silently reset THEIR password at the next prompt, not create a new
+    # account. Always override with a real recipient's email before
+    # running this for real: `docker compose run --rm create-user python
+    # Codes/api/create_user.py --email <real-recipient> --role admin`.
+    command: ["python", "Codes/api/create_user.py", "--email", "admin@yourcompany.com", "--role", "admin"]
+
+volumes:
+  caddy_data:
+  caddy_config:
