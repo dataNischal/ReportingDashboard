@@ -1222,7 +1222,15 @@
             <button class="tab-btn" onclick="switchTab(event, 'tab-tat')">TAT Analysis</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-segmentation')">Segmentation Overview</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-daily')">Daily Overview</button>
-            <button class="tab-btn" onclick="switchTab(event, 'tab-forecast')">Forecast</button>
+            <!-- Forecast tab deliberately disabled -- forecasting isn't
+                 available yet (see CLAUDE.md's "ML forecasting is out of
+                 scope for now"). Removing this button makes #tab-forecast
+                 (below, now `hidden`) unreachable -- nothing else in this
+                 file can activate a tab without a button calling
+                 switchTab(). Re-enable by restoring this button (and
+                 removing `hidden` from the panel) once forecasting is
+                 ready; the tab's own HTML/JS is left completely intact
+                 below, not deleted. -->
         </div>
 
         <!-- Tab 1: Trends -->
@@ -1514,7 +1522,11 @@
              unfiltered-dataset reference row, never as a selectable button.
              renderForecastTab() takes no arguments so its own local controls
              can re-render without re-running the full applyFilters(). -->
-        <div class="tab-panel" id="tab-forecast">
+        <!-- hidden: belt-and-suspenders on top of removing the tab button
+             above -- this panel can never become the active tab without a
+             button to switch to it, but hidden makes the disabled state
+             explicit here too rather than relying on that alone. -->
+        <div class="tab-panel" id="tab-forecast" hidden>
             <div class="chart-card">
                 <div class="forecast-controls-row">
                     <div class="tat-metric-toggle" id="forecast-granularity-toggle" style="display:none;">

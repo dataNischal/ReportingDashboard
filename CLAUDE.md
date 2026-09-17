@@ -438,7 +438,23 @@ Reference-tier data, and `GET /api/forecast_ml` returns
 `{"forecast_status": "not_yet_generated"}` when `forecast_cache` (a
 single-row cache table meant to be populated by a `predictive_model.py`
 this project doesn't yet have) is empty. The dashboard's client-side-only
-Forecast "Live" tier (Naive/Seasonal Naive/SES/Holt-Damped) is unaffected.
+Forecast "Live" tier (Naive/Seasonal Naive/SES/Holt-Damped) is unaffected
+by any of this Reference-tier gap on its own.
+
+**The Forecast tab itself is currently disabled in the dashboard UI**,
+though — a deliberate, explicit choice (not a bug, and not the same thing
+as the Reference-tier gap above): the tab button in
+`interactive_dashboard_template.html`'s `.tab-bar` was removed (replaced
+with an HTML comment explaining why and how to reverse it), and
+`#tab-forecast`'s panel `div` has a `hidden` attribute added defensively
+on top of that. Nothing else was deleted — the panel's full HTML, its
+`TAB_RENDERERS['tab-forecast']` entry, `renderForecastTab()`, and every
+other Forecast-tab function are all still intact, just unreachable
+because nothing in the file can `switchTab()` to it without a button
+wired to call that. This means the working client-side "Live" tier is
+ALSO currently hidden from users, not just the empty Reference tier —
+re-enabling is a matter of restoring the removed button (and dropping
+`hidden` from the panel), not rebuilding anything.
 
 ### Auth (`Codes/api/`)
 
