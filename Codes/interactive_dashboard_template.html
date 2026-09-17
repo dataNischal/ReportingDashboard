@@ -1660,8 +1660,30 @@
      per top-level payload section (see interactive_dashboard_generator.py),
      so the JS below can JSON.parse each one lazily, only when the tab that
      actually needs it is first opened, instead of one synchronous parse of
-     the entire combined payload blocking every line of script that follows. -->
-DASHBOARD_DATA_BLOCKS_PLACEHOLDER
+     the entire combined payload blocking every line of script that follows.
+
+     The placeholder line just below is itself a complete, standalone HTML
+     comment (opening and closing delimiters both on that one line) --
+     interactive_dashboard_generator.py's substitution replaces that entire
+     line, delimiters included, not just the DASHBOARD_DATA_BLOCKS_PLACEHOLDER
+     token inside it. That's specifically so the live/API-driven path (GET
+     /dashboard serves this file completely unmodified, no substitution at
+     all -- see CLAUDE.md's "Two ways to view the dashboard" section) leaves
+     behind a normal, inert comment there instead of bare visible text.
+     Confirmed the hard way this matters, TWICE over: first when the
+     placeholder itself was an unwrapped line and rendered as literal
+     visible text at the bottom of every tab; then again when an earlier
+     version of *this very explanatory comment* quoted that placeholder
+     line's own closing delimiter inline, which closed THIS comment early
+     and made the rest of this explanation render as visible text instead.
+     Lesson written into the rule, not just the anecdote: never spell out
+     a literal closing-comment-delimiter sequence anywhere inside a
+     comment's body, including in an example or quotation, no matter how
+     tempting -- describe it in prose instead, exactly as done here. If you
+     ever change the placeholder token, update
+     interactive_dashboard_generator.py's matching .replace() call in the
+     same commit -- the two must stay byte-for-byte identical. -->
+<!--DASHBOARD_DATA_BLOCKS_PLACEHOLDER-->
 
 <script>
     (async function () {

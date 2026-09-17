@@ -267,6 +267,43 @@ different ways, and the template itself detects which one it's in:
    explicitly re-exposed on `window` inside the IIFE, since function
    declarations inside it aren't globally reachable otherwise.
 
+**`DASHBOARD_DATA_BLOCKS_PLACEHOLDER` is wrapped in its own HTML comment
+in the template** (`<!--DASHBOARD_DATA_BLOCKS_PLACEHOLDER-->`) —
+`interactive_dashboard_generator.py`'s substitution replaces the WHOLE
+comment (delimiters included), not just the inner token, specifically so
+the live/API-driven path (which serves this template completely
+unmodified — no substitution at all, see above) leaves behind a normal,
+inert HTML comment instead of a bare line of visible text. Confirmed the
+hard way this matters: it used to be an unwrapped line, and really did
+render as literal visible text at the bottom of every tab (scroll down
+far enough on any tab and there it was) on the live dashboard — nothing
+was wrong with the data or the fetch, the placeholder itself was just
+sitting directly in the page body with nothing hiding it. If you ever
+change this token, the template's `<!--DASHBOARD_DATA_BLOCKS_PLACEHOLDER-->`
+and the generator's matching `.replace()` call must stay byte-for-byte
+identical, including the comment delimiters — wrapping only the inner
+token (e.g. a comment around a still-bare `DASHBOARD_DATA_BLOCKS_PLACEHOLDER`)
+would NOT work: the generator's substitution would then land the real
+`<script id="dashboard-data-...">` blocks *inside* that comment in the
+static-generated file, silently breaking `getPayloadSection()`'s
+`document.getElementById()` lookups there instead.
+
+**This bug recurred once already, inside its own fix.** The template's
+explanatory comment directly above the placeholder originally illustrated
+the fix by quoting the placeholder's own comment delimiters literally
+inline — which is exactly the mistake this whole section warns about: an
+HTML comment ends at the FIRST closing-comment-delimiter sequence it
+contains, full stop, no nesting, regardless of quote marks or intent
+around it. That closed the explanatory comment early, right in the middle
+of a sentence, and everything after it up to the next such sequence
+rendered as literal visible text — the exact bug being fixed, reintroduced
+by the fix's own commentary. Lesson generalized, not just patched: never
+write out a literal closing-comment-delimiter sequence anywhere inside an
+HTML comment's body in this file, including in an example, a quotation, or
+a code snippet — describe it in prose instead. If you're editing that
+comment and need to double-check: the whole block should contain exactly
+one such sequence, at its very end.
+
 `Codes/api/repositories.py`'s `DashboardReportRepository` (used by
 `routers/dashboard.py`'s endpoints: `/rows`, `/tat_rows`,
 `/creation_time_rows`, `/status_rows`, `/filter_options`) queries four

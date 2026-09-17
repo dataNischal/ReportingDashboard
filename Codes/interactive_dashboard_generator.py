@@ -241,8 +241,14 @@ class DashboardGenerator:
             )
         logger.info("Total payload size: %d bytes", total_bytes)
 
+        # Replaces the WHOLE HTML comment (delimiters included), not just the
+        # inner token -- see the template's own comment at this exact spot
+        # for why: it's what keeps the live/API-driven path (which serves
+        # this template completely unmodified, no substitution at all) from
+        # rendering the placeholder as literal visible text on the page.
+        # Keep this string byte-for-byte identical to the template's.
         output_html = template_html.replace(
-            "DASHBOARD_DATA_BLOCKS_PLACEHOLDER", "\n".join(data_blocks),
+            "<!--DASHBOARD_DATA_BLOCKS_PLACEHOLDER-->", "\n".join(data_blocks),
         )
         written_to = self.writer.write_text(output_html, output_dir, file_name)
 
