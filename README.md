@@ -9,6 +9,11 @@ it to the dashboard HTML through a FastAPI middleware layer with its own
 login system. Class-based throughout (sync OOP for the ETL side, async OOP
 for the API side) — see `CLAUDE.md` for the full architecture writeup.
 
+**Not setting this up, just want to use the dashboard, or explain it to
+someone who will?** See `DASHBOARD_GUIDE.md` (plain-language, tab by tab)
+instead of this file. For a diagram-first look at how data flows through
+the whole system, see `WORKFLOW.md`.
+
 ## Layout
 
 ```

@@ -11,6 +11,10 @@ PostgreSQL-centric ETL + dashboard, spun out from an earlier S3/CSV-based
 either as a static pre-baked file or through a FastAPI layer with its own
 login system. There is no test suite in this repo.
 
+Related docs, different audiences: `README.md` (setup/run commands),
+`WORKFLOW.md` (the architecture below, as diagrams), `DASHBOARD_GUIDE.md`
+(non-technical, for people who just use the dashboard).
+
 Class-based throughout, not a script collection: the ETL/cleaning side
 (`Codes/cleaning_functions.py`, `Codes/analytics.py`,
 `Codes/postgres_pipeline.py`, `Codes/file_io_utils.py`,

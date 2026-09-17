@@ -103,7 +103,17 @@ app = FastAPI(
     description=(
         "Middleware between the transaction dashboard HTML shell and the "
         "business_report materialized view -- authentication plus filtered, "
-        "server-side-aggregated dashboard data endpoints."
+        "server-side-aggregated dashboard data endpoints.\n\n"
+        "This page (`/docs`) documents the REST API itself -- request/"
+        "response shapes for the endpoints below. For everything else, see "
+        "the project's own docs (in the repo, not served here):\n\n"
+        "- **README.md** -- setup and run instructions\n"
+        "- **WORKFLOW.md** -- how data flows through the whole system, as "
+        "diagrams\n"
+        "- **DASHBOARD_GUIDE.md** -- a plain-language guide to using the "
+        "dashboard itself (non-technical)\n"
+        "- **CLAUDE.md** -- full architecture and every design decision, "
+        "for developers"
     ),
     version="1.0.0",
     lifespan=lifespan,
