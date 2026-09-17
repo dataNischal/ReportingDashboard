@@ -12,7 +12,9 @@ for the API side) — see `CLAUDE.md` for the full architecture writeup.
 **Not setting this up, just want to use the dashboard, or explain it to
 someone who will?** See `DASHBOARD_GUIDE.md` (plain-language, tab by tab)
 instead of this file. For a diagram-first look at how data flows through
-the whole system, see `WORKFLOW.md`.
+the whole system, see `WORKFLOW.md`. Once the app is running, both are
+also readable straight from a browser at `/help` (diagrams included) —
+no separate file needed, and no login required.
 
 ## Layout
 
@@ -137,6 +139,14 @@ it's bind-mounted — but Caddy still needs telling to re-read it:
 `docker compose exec caddy caddy reload --config /etc/caddy/Caddyfile`
 (on Windows Git Bash specifically, prefix that with `MSYS_NO_PATHCONV=1`
 or the `/etc/caddy/...` path gets silently mangled into a Windows path).
+
+If you rebuild and redeploy but a browser still shows the old `/login` or
+`/dashboard` page, that's the browser's own cache, not a failed
+deploy — do a hard refresh (Ctrl+Shift+R / Cmd+Shift+R) to confirm. This
+shouldn't happen going forward (both pages are served with explicit
+`Cache-Control: no-store`), but anyone who loaded the page before this fix
+shipped may have an old cached copy their browser won't think to
+re-check.
 See `CLAUDE.md`'s "Deploying a code change (Docker)" section for more.
 
 **Performance note**: even with the pre-aggregated views (see below), a

@@ -13,7 +13,18 @@ login system. There is no test suite in this repo.
 
 Related docs, different audiences: `README.md` (setup/run commands),
 `WORKFLOW.md` (the architecture below, as diagrams), `DASHBOARD_GUIDE.md`
-(non-technical, for people who just use the dashboard).
+(non-technical, for people who just use the dashboard). `WORKFLOW.md` and
+`DASHBOARD_GUIDE.md` are ALSO both rendered live at `GET /help`
+(`Codes/api/main.py`'s `help_page()` + `Codes/api/static/help.html`) —
+Mermaid diagrams included, via client-side `marked.js`/`mermaid.js`
+(CDN-loaded, no build step, same pattern as the dashboard's own Plotly) —
+complementary to `/docs` (FastAPI's auto-generated REST API reference,
+unrelated, and not the place for either of these: Swagger UI can't
+render Mermaid). No auth required for `/help`, same as `/docs`; linked
+from both the login page footer and the dashboard header (`.help-btn`,
+opens in a new tab). Requires `WORKFLOW.md`/`DASHBOARD_GUIDE.md` to
+actually be in the deployed image — see the Dockerfile's `COPY` for them,
+right after `cleaning_config.yml`.
 
 Class-based throughout, not a script collection: the ETL/cleaning side
 (`Codes/cleaning_functions.py`, `Codes/analytics.py`,
@@ -460,6 +471,22 @@ ALSO currently hidden from users, not just the empty Reference tier —
 re-enabling is a matter of restoring the removed button (and dropping
 `hidden` from the panel), not rebuilding anything.
 
+**`/login` and `/dashboard` are served with explicit `Cache-Control:
+no-store, no-cache, must-revalidate`** (`main.py`'s `_NO_CACHE_HEADERS`,
+passed to both `FileResponse` calls) — confirmed the hard way this was
+necessary: `FileResponse` auto-adds `ETag`/`Last-Modified` from the file's
+on-disk mtime but sets no `Cache-Control` at all, and `docker build`'s
+`COPY` preserves each source file's original mtime rather than resetting
+it to build time — so after a real deploy, a browser that had cached an
+earlier version computed its own heuristic freshness lifetime from that
+(old-looking) `Last-Modified` and kept serving the stale page indefinitely
+without ever re-asking the server, no matter how many times the container
+was rebuilt. `no-store` (not just `no-cache`) specifically because there's
+no upside to letting a browser cache either page at all -- both are cheap
+to re-fetch and can change on every deploy. If a future route serves
+another HTML file this way, give it the same `headers=_NO_CACHE_HEADERS`
+treatment -- this bug will recur for any new `FileResponse` that omits it.
+
 ### Auth (`Codes/api/`)
 
 Server-side opaque session tokens in Postgres (`app_sessions`), not JWTs —
@@ -635,4 +662,6 @@ Codes/api/routers/auth.py               # POST /api/login, /api/logout, GET /api
 Codes/api/routers/dashboard.py          # GET /api/rows, /tat_rows, /creation_time_rows, /status_rows, /filter_options, /forecast_ml
 Codes/api/static/login.html             # standalone login page -- matches the dashboard's own
                                          # "cloud" theme/iSend branding, not a generic form
+Codes/api/static/help.html              # GET /help template -- renders WORKFLOW.md + DASHBOARD_GUIDE.md
+                                         # client-side (marked.js/mermaid.js), see main.py's help_page()
 ```

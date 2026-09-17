@@ -330,6 +330,33 @@
             background: rgba(239, 68, 68, 0.08);
         }
 
+        /* Same outlined shape as .logout-btn, hovering to the accent color
+           instead of red -- opening docs isn't a destructive action. Plain
+           <a>, not <button>, since it just navigates (a new tab, so it
+           doesn't disturb whatever filters/tab the user currently has open). */
+        .help-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: transparent;
+            border: 1px solid var(--card-border);
+            color: var(--text-muted);
+            padding: 0.75rem 1.25rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            font-family: var(--font-family);
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .help-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--accent-glow);
+        }
+
         /* Filter Grid Section */
         .filters-title {
             font-size: 1.1rem;
@@ -1112,6 +1139,10 @@
                 </select>
             </div>
             <button class="reset-btn" onclick="resetFilters()">Reset Filters</button>
+            <a class="help-btn" href="/help" target="_blank" rel="noopener" title="Help &amp; Documentation">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                Help
+            </a>
             <button class="logout-btn" onclick="logout()" title="Log out">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
                 Log Out

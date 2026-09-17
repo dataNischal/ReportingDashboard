@@ -29,6 +29,10 @@ RUN groupadd --system app && useradd --system --gid app --create-home app
 COPY --from=builder /install /usr/local
 
 COPY cleaning_config.yml ./
+# WORKFLOW.md/DASHBOARD_GUIDE.md: read at request time by Codes/api/main.py's
+# GET /help (see that route's docstring) -- README.md/CLAUDE.md aren't
+# needed at runtime (nothing serves them) so they're deliberately left out.
+COPY WORKFLOW.md DASHBOARD_GUIDE.md ./
 COPY sql ./sql
 COPY Codes ./Codes
 
