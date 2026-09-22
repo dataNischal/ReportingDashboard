@@ -57,6 +57,7 @@ _AGENT_SEGMENT_GROUPS = {
     "iSend Biz": [
         "HAND MONEY PAYMENTS, S.A. de C.V.",
         "iSend BIZ SGP",
+        "KiraFin"
     ],
     "iSend C2C": [
         "iSend App USA",
